@@ -1,0 +1,168 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Nuventra.NuvexaMQ.Desktop.MainWindow"
+        Title="NuvexaMQ"
+        Icon="avares://Nuventra.NuvexaMQ.Desktop/Assets/icon.png"
+        Width="980"
+        Height="800"
+        MinWidth="760"
+        MinHeight="640"
+        Background="#f3f6f8"
+        WindowStartupLocation="CenterScreen">
+  <Window.Styles>
+    <Style Selector="Button">
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.start">
+      <Setter Property="Background" Value="#1aa6b8" />
+    </Style>
+    <Style Selector="Button.start:pointerover">
+      <Setter Property="Background" Value="#148a99" />
+    </Style>
+    <Style Selector="Button.stop">
+      <Setter Property="Background" Value="#e11d48" />
+    </Style>
+    <Style Selector="Button.stop:pointerover">
+      <Setter Property="Background" Value="#be123c" />
+    </Style>
+    <Style Selector="Button.open">
+      <Setter Property="Background" Value="#2563eb" />
+    </Style>
+    <Style Selector="Button.open:pointerover">
+      <Setter Property="Background" Value="#1d4ed8" />
+    </Style>
+    <Style Selector="Button.browse">
+      <Setter Property="Background" Value="#0c2340" />
+    </Style>
+    <Style Selector="Button.browse:pointerover">
+      <Setter Property="Background" Value="#16365c" />
+    </Style>
+    <Style Selector="Button.browse:disabled">
+      <Setter Property="Background" Value="#d5dee6" />
+      <Setter Property="Foreground" Value="#7b8b98" />
+    </Style>
+    <Style Selector="Button:disabled">
+      <Setter Property="Background" Value="#d5dee6" />
+      <Setter Property="Foreground" Value="#7b8b98" />
+    </Style>
+    <Style Selector="Button /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="SelectableTextBlock.link">
+      <Setter Property="Foreground" Value="#1aa6b8" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Cursor" Value="IBeam" />
+      <Setter Property="FocusAdorner" Value="{x:Null}" />
+      <Setter Property="SelectionBrush" Value="#1aa6b8" />
+      <Setter Property="SelectionForegroundBrush" Value="White" />
+    </Style>
+    <Style Selector="ListBox.console">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#d7eef2" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+      <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+    </Style>
+    <Style Selector="ListBox.console ListBoxItem">
+      <Setter Property="Padding" Value="0,1" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Margin" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#d7eef2" />
+      <Setter Property="FontFamily" Value="Menlo, Consolas, monospace" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="ListBox.console ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#16365c" />
+    </Style>
+    <Style Selector="ListBox.console ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#1aa6b8" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+  </Window.Styles>
+  <DockPanel>
+    <Border DockPanel.Dock="Top" Background="#0c2340" Padding="20,16">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Image Source="avares://Nuventra.NuvexaMQ.Desktop/Assets/icon.png" Width="40" Height="40"/>
+        <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+          <TextBlock Text="NuvexaMQ" Foreground="White" FontSize="20" FontWeight="SemiBold"/>
+          <TextBlock Text="Broker desktop" Foreground="#9fd4dc" FontSize="12"/>
+        </StackPanel>
+        <Border Grid.Column="2" Background="#16365c" CornerRadius="12" Padding="12,6" VerticalAlignment="Center">
+          <TextBlock Name="StatusText" Text="Stopped" Foreground="White" FontWeight="SemiBold"/>
+        </Border>
+      </Grid>
+    </Border>
+
+    <Grid Margin="20" RowDefinitions="Auto,Auto,*">
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <Button Name="StartButton" Classes="start" Content="Start" Click="StartClick" MinWidth="110" Height="36" Padding="16,0" CornerRadius="8" AutomationProperties.Name="Start"/>
+        <Button Name="StopButton" Classes="stop" Content="Stop" Click="StopClick" MinWidth="110" Height="36" Padding="16,0" CornerRadius="8" AutomationProperties.Name="Stop"/>
+        <Button Name="OpenButton" Classes="open" Content="Open admin portal" Click="OpenClick" MinWidth="170" Height="36" Padding="16,0" CornerRadius="8" AutomationProperties.Name="Open admin portal"/>
+      </StackPanel>
+
+      <Border Grid.Row="1" Margin="0,16,0,16" Background="White" CornerRadius="12" Padding="18" BoxShadow="0 1 4 0 #14000000">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Listeners" FontSize="18" FontWeight="SemiBold" Foreground="#0c2340"/>
+          <TextBlock Text="Broker, health, and the admin console. guest / guest signs in only from this machine." Foreground="#4d6270" TextWrapping="Wrap"/>
+          <Grid ColumnDefinitions="160,*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+            <TextBlock Text="Broker port" VerticalAlignment="Center"/>
+            <TextBox Name="BrokerPortBox" Grid.Column="1" Watermark="5761" TextChanged="PortChanged"/>
+            <SelectableTextBlock Name="BrokerPreview" Classes="link" Grid.Column="2" Margin="12,0,0,0" PointerReleased="SelectUrlOnClick"/>
+
+            <TextBlock Grid.Row="1" Margin="0,10,0,0" Text="Health port" VerticalAlignment="Center"/>
+            <TextBox Name="HealthPortBox" Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" Watermark="5762" TextChanged="PortChanged"/>
+            <SelectableTextBlock Name="HealthPreview" Classes="link" Grid.Row="1" Grid.Column="2" Margin="12,10,0,0" PointerReleased="SelectUrlOnClick"/>
+
+            <TextBlock Grid.Row="2" Margin="0,10,0,0" Text="Admin HTTP port" VerticalAlignment="Center"/>
+            <TextBox Name="HttpPortBox" Grid.Row="2" Grid.Column="1" Margin="0,10,0,0" Watermark="5763" TextChanged="PortChanged"/>
+            <SelectableTextBlock Name="HttpPreview" Classes="link" Grid.Row="2" Grid.Column="2" Margin="12,10,0,0" PointerReleased="SelectUrlOnClick"/>
+
+            <TextBlock Grid.Row="3" Margin="0,10,0,0" Text="Admin HTTPS port" VerticalAlignment="Center"/>
+            <TextBox Name="HttpsPortBox" Grid.Row="3" Grid.Column="1" Margin="0,10,0,0" Watermark="5764" TextChanged="PortChanged"/>
+            <SelectableTextBlock Name="HttpsPreview" Classes="link" Grid.Row="3" Grid.Column="2" Margin="12,10,0,0" PointerReleased="SelectUrlOnClick"/>
+
+            <TextBlock Grid.Row="4" Margin="0,10,0,0" Text="Data directory" VerticalAlignment="Center"/>
+            <TextBox Name="DataDirBox" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,10,0,0"/>
+
+            <StackPanel Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="28" Margin="0,12,0,0">
+              <CheckBox Name="LoggingBox" Content="Enable logging" IsCheckedChanged="LoggingChanged" VerticalAlignment="Center"/>
+              <CheckBox Name="VerboseBox" Content="Verbose console logs" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <TextBlock Grid.Row="6" Margin="0,10,0,0" Text="Logs path" VerticalAlignment="Center"/>
+            <TextBox Name="LogsPathBox" Grid.Row="6" Grid.Column="1" Margin="0,10,8,0" LostFocus="LogsPathLostFocus"/>
+            <Button Name="BrowseLogsButton" Classes="browse" Grid.Row="6" Grid.Column="2" Margin="4,10,0,0" Content="Browse" Click="BrowseLogsClick" MinWidth="96" Height="32" Padding="16,0" CornerRadius="8" HorizontalAlignment="Left" VerticalAlignment="Center" AutomationProperties.Name="Browse"/>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="2" Background="#0c2340" CornerRadius="12" Padding="14">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" Text="Console" Foreground="White" FontWeight="SemiBold" Margin="0,0,0,8"/>
+          <ListBox Name="LogList"
+                   Classes="console"
+                   SelectionMode="Multiple"
+                   FontFamily="Menlo, Consolas, monospace"
+                   FontSize="12">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <VirtualizingStackPanel/>
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding}" TextWrapping="NoWrap"/>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </Border>
+    </Grid>
+  </DockPanel>
+</Window>

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=NuvexaMQ
+Comment=Start and stop the NuvexaMQ broker
+Terminal=false
+Categories=Development;
+Icon=nuvexamq
+Exec=nuvexamq-desktop

@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NuvexaMQ Management</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #10233f;
+      --paper: #f4f7fb;
+      --card: #ffffff;
+      --line: #d9e2ec;
+      --muted: #5c6b7a;
+      --accent: #1aa6b8;
+      --accent-ink: #0e7490;
+      --ok: #166534;
+      --danger: #9f1239;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 15px/1.45 ui-sans-serif, system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 24px;
+      background: #0c2340;
+      color: #f4f7fb;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand img, .login img { border-radius: 10px; display: block; }
+    header strong { font-size: 18px; letter-spacing: 0.01em; }
+    header span { color: #d6d3d1; margin-left: 10px; }
+    button, input, textarea {
+      font: inherit;
+    }
+    button {
+      border: 1px solid transparent;
+      background: var(--accent);
+      color: white;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.85; cursor: progress; }
+    button[aria-busy="true"]::before {
+      content: "";
+      display: inline-block;
+      width: 0.85em;
+      height: 0.85em;
+      margin-right: 8px;
+      border: 2px solid rgba(255,255,255,0.45);
+      border-top-color: white;
+      border-radius: 50%;
+      vertical-align: -0.12em;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    button.ghost {
+      background: transparent;
+      color: #faf7f2;
+      border-color: #57534e;
+    }
+    button.danger {
+      background: transparent;
+      color: var(--danger);
+      border-color: #fecdd3;
+      padding: 4px 8px;
+    }
+    button.danger:hover { background: #fff1f2; }
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    button.link {
+      background: transparent;
+      color: var(--accent-ink);
+      padding: 0;
+    }
+    nav {
+      display: flex;
+      gap: 6px;
+      padding: 12px 24px 0;
+      flex-wrap: wrap;
+    }
+    nav button {
+      background: transparent;
+      color: var(--muted);
+      border-radius: 8px 8px 0 0;
+    }
+    nav button[aria-current="page"] {
+      background: var(--card);
+      color: var(--ink);
+      box-shadow: inset 0 -2px 0 var(--accent);
+    }
+    main { padding: 8px 24px 40px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-top: 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .stat b { display: block; font-size: 28px; margin-top: 4px; }
+    .stat small { color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: 13px; }
+    label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: white;
+      color: var(--ink);
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    form.stack { display: grid; gap: 12px; max-width: 560px; }
+    .row { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+    .row > * { flex: 1; }
+    .error { color: var(--danger); min-height: 1.2em; }
+    .note { color: var(--muted); }
+    .login {
+      max-width: 420px;
+      margin: 10vh auto;
+    }
+    .hidden { display: none; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+    .payload { white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+<body>
+  <div id="login" class="card login">
+    <img src="/icon.png" alt="" width="72" height="72">
+    <h1>NuvexaMQ</h1>
+    <p class="note">Management login. This is separate from the cluster token. The user <code>guest</code> can sign in only from this machine.</p>
+    <form id="login-form" class="stack">
+      <label>Username <input id="username" name="username" autocomplete="username" value="guest" required></label>
+      <label>Password <input id="password" name="password" type="password" autocomplete="current-password" required></label>
+      <button id="login-button" type="submit">Login</button>
+      <p id="login-error" class="error" role="alert"></p>
+    </form>
+  </div>
+
+  <div id="app" class="hidden">
+    <header>
+      <div class="brand">
+        <img src="/icon.png" alt="" width="40" height="40">
+        <div><strong>NuvexaMQ</strong><span id="node"></span></div>
+      </div>
+      <div>
+        <span id="who"></span>
+        <button id="logout" class="ghost" type="button">Log out</button>
+      </div>
+    </header>
+    <nav aria-label="Management">
+      <button type="button" data-page="overview">Overview</button>
+      <button type="button" data-page="connections">Connections</button>
+      <button type="button" data-page="channels">Channels</button>
+      <button type="button" data-page="exchanges">Exchanges</button>
+      <button type="button" data-page="queues">Queues</button>
+      <button type="button" data-page="streams">Streams</button>
+      <button type="button" data-page="admin">Admin</button>
+      <button type="button" data-page="publish">Publish message</button>
+    </nav>
+    <main>
+      <p id="notice" class="error" role="status"></p>
+      <section id="page-overview"></section>
+      <section id="page-connections" class="hidden"></section>
+      <section id="page-channels" class="hidden"></section>
+      <section id="page-exchanges" class="hidden"></section>
+      <section id="page-queues" class="hidden"></section>
+      <section id="page-streams" class="hidden"></section>
+      <section id="page-admin" class="hidden"></section>
+      <section id="page-publish" class="hidden">
+        <form id="publish-form" class="card stack">
+          <h2>Publish message</h2>
+          <label>Subject <input name="subject" required placeholder="orders.created"></label>
+          <label>Routing key <input name="key" placeholder="order-18"></label>
+          <label>Payload <textarea name="payload"></textarea></label>
+          <div><button type="submit">Publish message</button></div>
+          <div id="publish-result"></div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const login = document.getElementById("login");
+    const app = document.getElementById("app");
+    const notice = document.getElementById("notice");
+    let timer = 0;
+    let previous = null;
+
+    const loginButton = document.getElementById("login-button");
+    document.getElementById("login-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (loginButton.disabled)
+        return;
+      const error = document.getElementById("login-error");
+      error.textContent = "";
+      setLoginBusy(true);
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            username: document.getElementById("username").value,
+            password: document.getElementById("password").value
+          })
+        });
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          error.textContent = body.reason || "Login failed";
+          return;
+        }
+        await enter();
+      } catch (err) {
+        error.textContent = err.message || "Login failed";
+        login.classList.remove("hidden");
+        app.classList.add("hidden");
+      } finally {
+        if (!login.classList.contains("hidden"))
+          setLoginBusy(false);
+      }
+    });
+
+    function setLoginBusy(busy) {
+      loginButton.disabled = busy;
+      loginButton.textContent = busy ? "Signing in…" : "Login";
+      loginButton.setAttribute("aria-busy", busy ? "true" : "false");
+      document.getElementById("username").disabled = busy;
+      document.getElementById("password").disabled = busy;
+    }
+
+    document.getElementById("logout").addEventListener("click", async () => {
+      await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
+      clearInterval(timer);
+      app.classList.add("hidden");
+      login.classList.remove("hidden");
+      setLoginBusy(false);
+    });
+
+    document.querySelectorAll("nav button").forEach((button) => {
+      button.addEventListener("click", () => show(button.dataset.page));
+    });
+
+    document.getElementById("publish-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const data = Object.fromEntries(new FormData(form));
+      const result = document.getElementById("publish-result");
+      try {
+        const body = await api("/api/publish", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subject: data.subject, key: data.key, payload: data.payload })
+        });
+        showReceipts(result, body.receipts || [], body.routed);
+      } catch (err) {
+        result.replaceChildren(paragraph(err.message));
+      }
+    });
+
+    async function api(path, options) {
+      const response = await fetch(path, { credentials: "same-origin", ...options });
+      const body = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        clearInterval(timer);
+        app.classList.add("hidden");
+        login.classList.remove("hidden");
+        throw new Error(body.reason || "Login failed");
+      }
+      if (!response.ok)
+        throw new Error(body.reason || body.error || response.statusText);
+      return body;
+    }
+
+    async function enter() {
+      const who = await api("/api/whoami");
+      document.getElementById("who").textContent = who.username;
+      login.classList.add("hidden");
+      app.classList.remove("hidden");
+      show("overview");
+      clearInterval(timer);
+      timer = setInterval(() => {
+        if (!document.getElementById("page-overview").classList.contains("hidden"))
+          loadOverview().catch((err) => { notice.textContent = err.message; });
+      }, 5000);
+    }
+
+    function show(page) {
+      notice.textContent = "";
+      document.querySelectorAll("nav button").forEach((button) => {
+        if (button.dataset.page === page)
+          button.setAttribute("aria-current", "page");
+        else
+          button.removeAttribute("aria-current");
+      });
+      for (const name of ["overview", "connections", "channels", "exchanges", "queues", "streams", "admin", "publish"])
+        document.getElementById("page-" + name).classList.toggle("hidden", name !== page);
+      const loaders = {
+        overview: loadOverview,
+        connections: loadConnections,
+        channels: loadChannels,
+        exchanges: loadExchanges,
+        queues: loadQueues,
+        streams: loadStreams,
+        admin: loadAdmin
+      };
+      if (loaders[page])
+        loaders[page]().catch((err) => { notice.textContent = err.message; });
+    }
+
+    async function loadOverview() {
+      const body = await api("/api/overview");
+      const now = Date.now();
+      let rate = "";
+      if (previous) {
+        const seconds = Math.max(0.001, (now - previous.at) / 1000);
+        const perSecond = (body.messagesIn - previous.messagesIn) / seconds;
+        rate = ` · ${perSecond.toFixed(1)} in/s`;
+      }
+      previous = { at: now, messagesIn: body.messagesIn };
+      document.getElementById("node").textContent = body.node + " · " + body.version;
+      const host = document.getElementById("page-overview");
+      host.replaceChildren();
+      const stats = document.createElement("div");
+      stats.className = "grid";
+      for (const [label, value] of [
+        ["Messages in", String(body.messagesIn) + rate],
+        ["Messages out", String(body.messagesOut)],
+        ["Connections", String(body.connections)],
+        ["Channels", String(body.connections)],
+        ["Exchanges", String(body.exchanges)],
+        ["Queues", String(body.queues)],
+        ["Streams", String(body.streams)],
+        ["Consumers", String(body.consumers)],
+        ["Last fsync", Number(body.lastFsyncSeconds).toFixed(4) + "s"]
+      ]) {
+        const card = document.createElement("div");
+        card.className = "card stat";
+        const small = document.createElement("small");
+        small.textContent = label;
+        const strong = document.createElement("b");
+        strong.textContent = value;
+        card.append(small, strong);
+        stats.append(card);
+      }
+      host.append(stats);
+
+      const listeners = document.createElement("div");
+      listeners.className = "card";
+      listeners.append(heading("Listeners"));
+      const rows = [
+        ["Data directory", body.dataDir],
+        ["Cluster token", body.tokenRequired ? "required" : "off"],
+        ["TLS", body.tls ? "on" : "off"]
+      ];
+      for (const listener of body.listeners || [])
+        rows.push([listener.protocol, `${listener.address}:${listener.port}`]);
+      listeners.append(table(["", ""], rows));
+      host.append(listeners);
+
+      const parts = (body.partitions || []).map((part) => [part.stream, String(part.partition), String(part.firstOffset), String(part.committedOffset)]);
+      const partCard = document.createElement("div");
+      partCard.className = "card";
+      partCard.append(heading("Partitions"), table(["Stream", "Partition", "First offset", "Committed"], parts));
+      host.append(partCard);
+    }
+
+    async function loadConnections() {
+      const rows = await api("/api/connections");
+      const host = document.getElementById("page-connections");
+      host.replaceChildren();
+      const card = document.createElement("div");
+      card.className = "card";
+      card.append(heading("Connections (" + rows.length + ")"));
+      if (rows.length === 0)
+        card.append(paragraph("No clients are connected."));
+      else
+        card.append(table(["Name", "User", "Peer", "State", "Connected"], rows.map((row) => [row.client || "—", row.user || "—", row.peer, row.state, row.connectedAt])));
+      host.append(card);
+    }
+
+    async function loadChannels() {
+      const rows = await api("/api/channels");
+      const host = document.getElementById("page-channels");
+      host.replaceChildren();
+      const card = document.createElement("div");
+      card.className = "card";
+      card.append(heading("Channels (" + rows.length + ")"));
+      card.append(paragraph("Each connection has one channel."));
+      if (rows.length === 0)
+        card.append(paragraph("No channels."));
+      else
+        card.append(table(["Channel", "User", "Virtual host", "State", "Prefetch"], rows.map((row) => [row.name, row.user || "—", row.vhost || "/", row.state, String(row.prefetch)])));
+      host.append(card);
+    }
+
+    async function loadExchanges() {
+      const rows = await api("/api/exchanges?vhost=/");
+      const host = document.getElementById("page-exchanges");
+      host.replaceChildren();
+      const card = document.createElement("div");
+      card.className = "card";
+      card.append(heading("Exchanges (" + rows.length + ")"));
+      card.append(paragraph("Built-in exchanges stay. Delete removes a custom exchange and its bindings."));
+      const exchanges = table(["Name", "Type", "Durable"], rows.map((row) => [row.display, row.type, row.durable ? "yes" : "no"]));
+      withActions(exchanges, rows.map((row) => row.builtin || !row.name ? null : dangerButton(
+        "Delete",
+        "Delete exchange '" + row.name + "'? Its bindings are removed.",
+        async () => {
+          await api("/api/exchanges/" + encodeURIComponent(row.name) + "?vhost=/", { method: "DELETE" });
+          await loadExchanges();
+        }
+      )));
+      card.append(exchanges);
+      host.append(card);
+      const form = document.createElement("form");
+      form.className = "card stack";
+      form.append(heading("Add exchange"));
+      form.append(field("Name", "name", "orders"), field("Type", "type", "topic"));
+      const submit = document.createElement("div");
+      const button = document.createElement("button");
+      button.type = "submit";
+      button.textContent = "Add exchange";
+      submit.append(button);
+      form.append(submit);
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = Object.fromEntries(new FormData(form));
+        try {
+          await api("/api/exchanges/" + encodeURIComponent(data.name), {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ vhost: "/", type: data.type, durable: true })
+          });
+          await loadExchanges();
+        } catch (err) {
+          notice.textContent = err.message;
+        }
+      });
+      host.append(form);
+      const publish = document.createElement("form");
+      publish.className = "card stack";
+      publish.append(heading("Publish message"));
+      publish.append(field("Exchange", "exchange", "amq.topic"), field("Routing key", "routingKey", "orders.created"), field("Payload", "payload", "hello"));
+      const go = document.createElement("div");
+      const publishButton = document.createElement("button");
+      publishButton.type = "submit";
+      publishButton.textContent = "Publish message";
+      go.append(publishButton);
+      publish.append(go);
+      const result = document.createElement("div");
+      publish.append(result);
+      publish.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = Object.fromEntries(new FormData(publish));
+        try {
+          const body = await api("/api/exchanges/publish", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ vhost: "/", exchange: data.exchange, routingKey: data.routingKey, payload: data.payload })
+          });
+          showReceipts(result, (body.receipts || []).map((item) => ({ stream: "$queue." + item.queue, partition: item.partition, offset: item.offset })), body.routed);
+        } catch (err) {
+          result.replaceChildren(paragraph(err.message));
+        }
+      });
+      host.append(publish);
+    }
+
+    async function loadQueues() {
+      const [queues, bindings] = await Promise.all([api("/api/queues?vhost=/"), api("/api/bindings?vhost=/")]);
+      const host = document.getElementById("page-queues");
+      host.replaceChildren();
+      const card = document.createElement("div");
+      card.className = "card";
+      card.append(heading("Queues (" + queues.length + ")"));
+      card.append(paragraph("Purge drops every message and keeps the queue. Delete removes the queue, its bindings, and its messages."));
+      if (queues.length === 0)
+        card.append(paragraph("No queues yet."));
+      else {
+        const element = table(["Name", "Durable", "Max length", "Message TTL", "Dead letter"], queues.map((queue) => [
+          queue.name, queue.durable ? "yes" : "no", queue.maxLength ?? "—", queue.messageTtlMs ?? "—", queue.deadLetterExchange || "—"
+        ]));
+        withActions(element, queues.map((queue) => {
+          const actions = document.createElement("div");
+          actions.className = "actions";
+          actions.append(
+            dangerButton("Purge", "Purge every message in queue '" + queue.name + "'? The queue stays.", async () => {
+              await api("/api/queues/" + encodeURIComponent(queue.name) + "/purge?vhost=/", { method: "POST" });
+              await loadQueues();
+            }),
+            dangerButton("Delete", "Delete queue '" + queue.name + "'? Bindings and messages are removed.", async () => {
+              await api("/api/queues/" + encodeURIComponent(queue.name) + "?vhost=/", { method: "DELETE" });
+              await loadQueues();
+            })
+          );
+          return actions;
+        }));
+        card.append(element);
+      }
+      host.append(card);
+      const form = document.createElement("form");
+      form.className = "card stack";
+      form.append(heading("Add queue"));
+      form.append(field("Name", "name", "billing"));
+      const submit = document.createElement("div");
+      const button = document.createElement("button");
+      button.type = "submit";
+      button.textContent = "Add queue";
+      submit.append(button);
+      form.append(submit);
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = Object.fromEntries(new FormData(form));
+        try {
+          await api("/api/queues/" + encodeURIComponent(data.name), {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ vhost: "/", durable: true })
+          });
+          await loadQueues();
+        } catch (err) {
+          notice.textContent = err.message;
+        }
+      });
+      host.append(form);
+      const bind = document.createElement("form");
+      bind.className = "card stack";
+      bind.append(heading("Add binding"));
+      bind.append(field("Exchange", "exchange", "amq.topic"), field("Queue", "queue", "billing"), field("Routing key", "routingKey", "orders.#"));
+      const bindSubmit = document.createElement("div");
+      const bindButton = document.createElement("button");
+      bindButton.type = "submit";
+      bindButton.textContent = "Bind";
+      bindSubmit.append(bindButton);
+      bind.append(bindSubmit);
+      bind.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = Object.fromEntries(new FormData(bind));
+        try {
+          await api("/api/bindings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ vhost: "/", exchange: data.exchange, queue: data.queue, routingKey: data.routingKey })
+          });
+          await loadQueues();
+        } catch (err) {
+          notice.textContent = err.message;
+        }
+      });
+      host.append(bind);
+      if (bindings.length > 0) {
+        const list = document.createElement("div");
+        list.className = "card";
+        const bindingTable = table(["Exchange", "Queue", "Routing key"], bindings.map((item) => [item.exchange || "(AMQP default)", item.queue, item.routingKey || "—"]));
+        withActions(bindingTable, bindings.map((item) => dangerButton(
+          "Unbind",
+          "Remove the binding from '" + (item.exchange || "(AMQP default)") + "' to '" + item.queue + "'?",
+          async () => {
+            const query = new URLSearchParams({ vhost: "/", exchange: item.exchange || "", queue: item.queue, routingKey: item.routingKey || "" });
+            await api("/api/bindings?" + query.toString(), { method: "DELETE" });
+            await loadQueues();
+          }
+        )));
+        list.append(heading("Bindings"), bindingTable);
+        host.append(list);
+      }
+      const peek = document.createElement("form");
+      peek.className = "card stack";
+      peek.append(heading("Get messages"));
+      peek.append(paragraph("Reads the queue log. Consumer cursors stay where they are."));
+      peek.append(field("Queue", "queue", "billing"), field("Count", "count", "20"));
+      const peekGo = document.createElement("div");
+      const peekButton = document.createElement("button");
+      peekButton.type = "submit";
+      peekButton.textContent = "Get messages";
+      peekGo.append(peekButton);
+      peek.append(peekGo);
+      const peekResults = document.createElement("div");
+      peek.append(peekResults);
+      peek.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = Object.fromEntries(new FormData(peek));
+        try {
+          const page = await api(`/api/streams/${encodeURIComponent("$queue." + data.queue)}/messages?partition=0&count=${encodeURIComponent(data.count || 20)}`);
+          peekResults.replaceChildren();
+          if (!page.messages || page.messages.length === 0) {
+            peekResults.append(paragraph("No messages."));
+            return;
+          }
+          peekResults.append(messageTable("$queue." + data.queue, 0, page.messages, ["Offset", "Routing key", "Payload"], (message) => [String(message.offset), message.subject, message.payloadText ?? message.payloadBase64 ?? ""]));
+        } catch (err) {
+          peekResults.replaceChildren(paragraph(err.message));
+        }
+      });
+      host.append(peek);
+    }
+
+    async function loadAdmin() {
+      const [users, vhosts, permissions, policies] = await Promise.all([
+        api("/api/users"),
+        api("/api/vhosts"),
+        api("/api/permissions"),
+        api("/api/policies")
+      ]);
+      const host = document.getElementById("page-admin");
+      host.replaceChildren();
+      const usersCard = document.createElement("div");
+      usersCard.className = "card";
+      usersCard.append(heading("Users"));
+      const userTable = table(["Name", "Tags"], users.map((user) => [user.name, (user.tags || []).join(", ")]));
+      withActions(userTable, users.map((user) => dangerButton(
+        "Delete",
+        "Delete user '" + user.name + "' and that user's permissions?",
+        async () => {
+          await api("/api/users/" + encodeURIComponent(user.name), { method: "DELETE" });
+          await loadAdmin();
+        }
+      )));
+      usersCard.append(userTable);
+      host.append(usersCard);
+      const userForm = document.createElement("form");
+      userForm.className = "card stack";
+      userForm.append(heading("Add user"));
+      userForm.append(field("Name", "name", "billing"), field("Password", "password", ""), field("Tags", "tags", "management"));
+      const userButton = document.createElement("button");
+      userButton.type = "submit";
+      userButton.textContent = "Add user";
+      userForm.append(userButton);
+      userForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = Object.fromEntries(new FormData(userForm));
+        try {
+          await api("/api/users/" + encodeURIComponent(data.name), {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password: data.password, tags: String(data.tags || "").split(/[\s,]+/).filter(Boolean) })
+          });
+          await api("/api/permissions", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user: data.name, vhost: "/", configure: ".*", write: ".*", read: ".*" })
+          });
+          await loadAdmin();
+        } catch (err) {
+          notice.textContent = err.message;
+        }
+      });
+      host.append(userForm);
+      const perm = document.createElement("div");
+      perm.className = "card";
+      perm.append(heading("Permissions"));
+      perm.append(paragraph("configure, write, and read are regular expressions, the same three permissions as RabbitMQ."));
+      const permissionTable = table(["User", "Virtual host", "Configure", "Write", "Read"], permissions.map((item) => [item.user, item.vhost, item.configure, item.write, item.read]));
+      withActions(permissionTable, permissions.map((item) => dangerButton(
+        "Clear",
+        "Clear permissions for '" + item.user + "' on '" + item.vhost + "'?",
+        async () => {
+          const query = new URLSearchParams({ user: item.user, vhost: item.vhost });
+          await api("/api/permissions?" + query.toString(), { method: "DELETE" });
+          await loadAdmin();
+        }
+      )));
+      perm.append(permissionTable);
+      host.append(perm);
+      const hosts = document.createElement("div");
+      hosts.className = "card";
+      const vhostTable = table(["Name"], vhosts.map((item) => [item.name]));
+      withActions(vhostTable, vhosts.map((item) => item.name === "/" ? null : dangerButton(
+        "Delete",
+        "Delete virtual host '" + item.name + "'? Exchanges, queues, bindings, permissions, and policies on it are removed.",
+        async () => {
+          await api("/api/vhosts/" + encodeURIComponent(item.name), { method: "DELETE" });
+          await loadAdmin();
+        }
+      )));
+      hosts.append(heading("Virtual hosts"), paragraph("The default virtual host / cannot be deleted."), vhostTable);
+      host.append(hosts);
+      const vhostForm = document.createElement("form");
+      vhostForm.className = "card stack";
+      vhostForm.append(heading("Add virtual host"));
+      vhostForm.append(field("Name", "name", "production"));
+      const vhostButton = document.createElement("button");
+      vhostButton.type = "submit";
+      vhostButton.textContent = "Add virtual host";
+      vhostForm.append(vhostButton);
+      vhostForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = Object.fromEntries(new FormData(vhostForm));
+        try {
+          await api("/api/vhosts/" + encodeURIComponent(data.name), { method: "PUT" });
+          await loadAdmin();
+        } catch (err) {
+          notice.textContent = err.message;
+        }
+      });
+      host.append(vhostForm);
+      const policyCard = document.createElement("div");
+      policyCard.className = "card";
+      policyCard.append(heading("Policies"));
+      if (policies.length === 0)
+        policyCard.append(paragraph("No policies."));
+      else {
+        const policyTable = table(["Name", "Pattern", "TTL", "Max length", "Dead letter"], policies.map((item) => [item.name, item.pattern, item.messageTtlMs ?? "—", item.maxLength ?? "—", item.deadLetterExchange || "—"]));
+        withActions(policyTable, policies.map((item) => dangerButton(
+          "Delete",
+          "Delete policy '" + item.name + "'?",
+          async () => {
+            await api("/api/policies/" + encodeURIComponent(item.name) + "?vhost=" + encodeURIComponent(item.vhost || "/"), { method: "DELETE" });
+            await loadAdmin();
+          }
+        )));
+        policyCard.append(policyTable);
+      }
+      host.append(policyCard);
+      const policyForm = document.createElement("form");
+      policyForm.className = "card stack";
+      policyForm.append(heading("Add policy"));
+      policyForm.append(field("Name", "name", "limits"), field("Pattern", "pattern", "^orders"), field("Message TTL ms", "ttl", ""), field("Max length", "max", ""), field("Dead letter exchange", "dlx", ""));
+      const policyButton = document.createElement("button");
+      policyButton.type = "submit";
+      policyButton.textContent = "Add policy";
+      policyForm.append(policyButton);
+      policyForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = Object.fromEntries(new FormData(policyForm));
+        try {
+          await api("/api/policies/" + encodeURIComponent(data.name), {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              vhost: "/",
+              pattern: data.pattern,
+              messageTtlMs: data.ttl ? Number(data.ttl) : null,
+              maxLength: data.max ? Number(data.max) : null,
+              deadLetterExchange: data.dlx || null
+            })
+          });
+          await loadAdmin();
+        } catch (err) {
+          notice.textContent = err.message;
+        }
+      });
+      host.append(policyForm);
+    }
+
+    async function loadStreams() {
+      const streams = await api("/api/streams");
+      const host = document.getElementById("page-streams");
+      host.replaceChildren();
+      const list = document.createElement("div");
+      list.className = "card";
+      list.append(heading("Streams (" + streams.length + ")"));
+      if (streams.length === 0)
+        list.append(paragraph("No streams yet."));
+      else {
+        const element = table(["Name", "Filters", "Partitions", "Messages", "Consumers"], streams.map((stream) => [
+          stream.name, (stream.filters || []).join(" "), String(stream.partitionCount), String(stream.messages), String(stream.consumers)
+        ]));
+        element.querySelectorAll("tbody tr").forEach((row, index) => {
+          const cell = row.cells[0];
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "link";
+          button.textContent = streams[index].name;
+          button.addEventListener("click", () => openStream(streams[index].name));
+          cell.replaceChildren(button);
+        });
+        withActions(element, streams.map((stream) => stream.name === "$dlq" ? null : dangerButton(
+          "Delete",
+          "Delete stream '" + stream.name + "'? Its messages and consumers are removed.",
+          async () => {
+            await api("/api/streams/" + encodeURIComponent(stream.name), { method: "DELETE" });
+            await loadStreams();
+          }
+        )));
+        list.append(element);
+      }
+      host.append(list);
+
+      const form = document.createElement("form");
+      form.className = "card stack";
+      form.append(heading("Add a new stream"));
+      form.append(field("Name", "name", "orders"));
+      form.append(field("Filters", "filters", "orders.>"));
+      form.append(field("Partitions", "partitions", "1"));
+      const submit = document.createElement("div");
+      const button = document.createElement("button");
+      button.type = "submit";
+      button.textContent = "Add stream";
+      submit.append(button);
+      form.append(submit);
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = Object.fromEntries(new FormData(form));
+        const filters = String(data.filters || "").split(/[\s,]+/).filter(Boolean);
+        try {
+          await api("/api/streams/" + encodeURIComponent(data.name), {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filters, partitionCount: Number(data.partitions || 1) })
+          });
+          await openStream(data.name);
+        } catch (err) {
+          notice.textContent = err.message;
+        }
+      });
+      host.append(form);
+    }
+
+    async function openStream(name) {
+      notice.textContent = "";
+      const [stream, consumers] = await Promise.all([
+        api("/api/streams/" + encodeURIComponent(name)),
+        api("/api/consumers?stream=" + encodeURIComponent(name))
+      ]);
+      const host = document.getElementById("page-streams");
+      host.replaceChildren();
+      const card = document.createElement("div");
+      card.className = "card";
+      const back = document.createElement("button");
+      back.type = "button";
+      back.className = "link";
+      back.textContent = "All streams";
+      back.addEventListener("click", () => loadStreams().catch((err) => { notice.textContent = err.message; }));
+      card.append(back, heading(stream.name));
+      card.append(paragraph("Filters " + (stream.filters || []).join(" ") + " · " + countLabel(stream.messages, "message") + " · " + countLabel(stream.consumers, "consumer")));
+      const parts = (stream.partitions || []).map((part) => [String(part.partition), String(part.firstOffset), String(part.committedOffset)]);
+      card.append(heading("Partitions"), table(["Partition", "First offset", "Committed"], parts));
+      card.append(heading("Consumers"));
+      if (consumers.length === 0)
+        card.append(paragraph("No consumers on this stream."));
+      else
+        card.append(table(
+          ["Name", "Partition", "Pending", "Next offset", "Filter", "Ephemeral"],
+          consumers.map((item) => [item.name, String(item.partition), String(item.pending), String(item.nextOffset), item.filter || "—", item.ephemeral ? "yes" : "no"])
+        ));
+      host.append(card);
+
+      const get = document.createElement("form");
+      get.className = "card stack";
+      get.append(heading("Get messages"));
+      get.append(paragraph("Reads the log. Consumer cursors stay where they are."));
+      const controls = document.createElement("div");
+      controls.className = "row";
+      controls.append(field("Partition", "partition", "0"), field("Count", "count", "20"));
+      get.append(controls);
+      const go = document.createElement("div");
+      const button = document.createElement("button");
+      button.type = "submit";
+      button.textContent = "Get messages";
+      go.append(button);
+      get.append(go);
+      const results = document.createElement("div");
+      get.append(results);
+      get.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = Object.fromEntries(new FormData(get));
+        try {
+          const page = await api(`/api/streams/${encodeURIComponent(name)}/messages?partition=${encodeURIComponent(data.partition || 0)}&count=${encodeURIComponent(data.count || 20)}`);
+          results.replaceChildren();
+          if (!page.messages || page.messages.length === 0) {
+            results.append(paragraph("No messages on this partition."));
+            return;
+          }
+          results.append(messageTable(name, Number(data.partition || 0), page.messages, ["Offset", "Subject", "Key", "Payload"], (message) => [String(message.offset), message.subject, message.key || "—", message.payloadText ?? message.payloadBase64 ?? ""]));
+        } catch (err) {
+          notice.textContent = err.message;
+        }
+      });
+      host.append(get);
+    }
+
+    function countLabel(count, singular) {
+      return count + " " + singular + (count === 1 ? "" : "s");
+    }
+
+    function heading(text) {
+      const element = document.createElement("h2");
+      element.textContent = text;
+      return element;
+    }
+
+    function paragraph(text) {
+      const element = document.createElement("p");
+      element.className = "note";
+      element.textContent = text;
+      return element;
+    }
+
+    function field(label, name, value) {
+      const wrap = document.createElement("label");
+      wrap.textContent = label;
+      const input = document.createElement("input");
+      input.name = name;
+      input.value = value;
+      wrap.append(input);
+      return wrap;
+    }
+
+    function showReceipts(parent, receipts, routed) {
+      parent.replaceChildren();
+      if (!receipts.length) {
+        parent.append(paragraph(routed ? "Routed " + routed + "." : "Routed 0. No stream or queue captured this message."));
+        return;
+      }
+      parent.append(paragraph("Routed " + routed + ". Delete removes that copy. Consumers skip it."));
+      parent.append(messageTable(null, null, receipts, ["Stream", "Partition", "Offset"], (receipt) => [receipt.stream, String(receipt.partition), String(receipt.offset)]));
+    }
+
+    function messageTable(streamName, partition, messages, headers, cells) {
+      const element = table(headers, messages.map(cells));
+      withActions(element, messages.map((message) => {
+        const stream = streamName || message.stream;
+        const part = partition === null || partition === undefined ? message.partition : partition;
+        const offset = message.offset;
+        return dangerButton("Delete", "Delete the message at offset " + offset + " on '" + stream + "'? Consumers skip it.", async () => {
+          await api("/api/streams/" + encodeURIComponent(stream) + "/messages?partition=" + encodeURIComponent(part) + "&offset=" + encodeURIComponent(offset), { method: "DELETE" });
+          const body = element.tBodies[0];
+          const column = headers.indexOf("Offset");
+          for (const row of [...body.rows]) {
+            if (row.cells[column].textContent === String(offset)) {
+              row.remove();
+              break;
+            }
+          }
+          if (body.rows.length === 0)
+            element.replaceWith(paragraph("No messages."));
+        });
+      }));
+      return element;
+    }
+
+    function dangerButton(label, message, action) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "danger";
+      button.textContent = label;
+      button.addEventListener("click", async () => {
+        if (!window.confirm(message))
+          return;
+        button.disabled = true;
+        try {
+          await action();
+        } catch (err) {
+          notice.textContent = err.message;
+          button.disabled = false;
+        }
+      });
+      return button;
+    }
+
+    function withActions(element, cells) {
+      if (!cells.some(Boolean))
+        return element;
+      const header = document.createElement("th");
+      header.textContent = "";
+      element.tHead.rows[0].append(header);
+      [...element.tBodies[0].rows].forEach((row, index) => {
+        const cell = document.createElement("td");
+        if (cells[index])
+          cell.append(cells[index]);
+        row.append(cell);
+      });
+      return element;
+    }
+
+    function table(headers, rows) {
+      const element = document.createElement("table");
+      const head = document.createElement("thead");
+      const headRow = document.createElement("tr");
+      for (const header of headers) {
+        const cell = document.createElement("th");
+        cell.textContent = header;
+        headRow.append(cell);
+      }
+      head.append(headRow);
+      const body = document.createElement("tbody");
+      for (const row of rows) {
+        const line = document.createElement("tr");
+        row.forEach((value, index) => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          if (headers[index] === "Payload")
+            cell.className = "payload";
+          line.append(cell);
+        });
+        body.append(line);
+      }
+      element.append(head, body);
+      return element;
+    }
+
+    api("/api/whoami").then(enter).catch(() => {});
+  </script>
+</body>
+</html>

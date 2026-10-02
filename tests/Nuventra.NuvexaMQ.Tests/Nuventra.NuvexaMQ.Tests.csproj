@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Nuventra.NuvexaMQ.Engine\Nuventra.NuvexaMQ.Engine.csproj" />
+    <ProjectReference Include="..\..\src\Nuventra.NuvexaMQ.Client\Nuventra.NuvexaMQ.Client.csproj" />
+    <ProjectReference Include="..\..\src\Nuventra.NuvexaMQ.Server\Nuventra.NuvexaMQ.Server.csproj" />
+  </ItemGroup>
+
+</Project>

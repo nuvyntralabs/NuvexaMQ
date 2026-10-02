@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>Nuventra.NuvexaMQ</RootNamespace>
+    <AssemblyName>Nuventra.NuvexaMQ.Client</AssemblyName>
+    <PackageId>Nuventra.NuvexaMQ.Client</PackageId>
+    <Title>NuvexaMQ client</Title>
+    <Description>.NET client for the NuvexaMQ broker. Publish, stream setup, and pull consume with explicit ack.</Description>
+    <PackageTags>nuvexamq;client;queue;pubsub;dotnet</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsAotCompatible>true</IsAotCompatible>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nuventra.NuvexaMQ.Protocol\Nuventra.NuvexaMQ.Protocol.csproj" />
+  </ItemGroup>
+
+</Project>

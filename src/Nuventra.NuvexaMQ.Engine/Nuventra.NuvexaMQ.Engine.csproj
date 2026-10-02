@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>Nuventra.NuvexaMQ.Engine</RootNamespace>
+    <AssemblyName>Nuventra.NuvexaMQ.Engine</AssemblyName>
+    <PackageId>Nuventra.NuvexaMQ.Engine</PackageId>
+    <Title>NuvexaMQ engine</Title>
+    <Description>Durable partitioned log, streams, and consumers for the NuvexaMQ broker. No sockets.</Description>
+    <PackageTags>nuvexamq;queue;log;broker;dotnet</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsAotCompatible>true</IsAotCompatible>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+if ! id nuvexamq >/dev/null 2>&1; then
+  useradd --system --home-dir /var/lib/nuvexamq --shell /usr/sbin/nologin nuvexamq
+fi
+mkdir -p /var/lib/nuvexamq
+chown nuvexamq:nuvexamq /var/lib/nuvexamq
+if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+  systemctl daemon-reload
+  systemctl enable nuvexamq.service
+  systemctl restart nuvexamq.service
+fi
+exit 0

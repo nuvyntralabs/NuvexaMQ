@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    name: Test ${{ matrix.tfm }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        tfm: [net8.0, net9.0, net10.0]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+      - name: Test
+        run: >
+          dotnet test tests/Nuventra.NuvexaMQ.Tests/Nuventra.NuvexaMQ.Tests.csproj
+          -f ${{ matrix.tfm }}
+          -c Release
+          --nologo
+          -p:NuGetAudit=false
+
+  packages:
+    name: Package ${{ matrix.rid }}
+    needs: test
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: ubuntu-latest
+            rid: linux-arm64
+          - os: macos-latest
+            rid: osx-arm64
+          - os: macos-latest
+            rid: osx-x64
+          - os: windows-latest
+            rid: win-x64
+          - os: windows-latest
+            rid: win-arm64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Install WiX
+        if: startsWith(matrix.rid, 'win-')
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet tool install -g wix --version 5.0.2
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+      - name: Install fpm
+        if: startsWith(matrix.rid, 'linux-')
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ruby ruby-dev build-essential rpm
+          sudo gem install --no-document fpm
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props | head -1)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x packaging/pack.sh packaging/macos/postinstall packaging/linux/postinst packaging/linux/prerm packaging/linux/postrm
+          packaging/pack.sh "${{ steps.version.outputs.version }}" "${{ matrix.rid }}" "$PWD/artifacts"
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: NuvexaMQ-${{ matrix.rid }}
+          path: |
+            artifacts/NuvexaMQ-*.msi
+            artifacts/NuvexaMQ-*.pkg
+            artifacts/*.deb
+            artifacts/*.rpm
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,78 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+    Name="NuvexaMQ"
+    Manufacturer="Nuventra"
+    Version="$(var.ProductVersion)"
+    UpgradeCode="c4a1e8b2-7d33-4e91-8f60-1a2b3c4d5e00"
+    Scope="perMachine">
+    <SummaryInformation Description="NuvexaMQ message broker" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of NuvexaMQ is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <Feature Id="Main" Title="NuvexaMQ" Level="1">
+      <ComponentGroupRef Id="ServerFiles" />
+      <ComponentGroupRef Id="DesktopFiles" />
+      <ComponentRef Id="DataDirectory" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="InstallFolder" Name="NuvexaMQ">
+        <Directory Id="ServerFolder" Name="server" />
+        <Directory Id="DesktopFolder" Name="desktop" />
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="DataRoot" Name="NuvexaMQ">
+        <Directory Id="DataDir" Name="data" />
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ServerFiles" Directory="ServerFolder">
+      <Component Id="ServerExe" Guid="c4a1e8b2-7d33-4e91-8f60-1a2b3c4d5e01">
+        <File Id="ServerExe" Source="$(var.ServerDir)/nuvexamq.exe" KeyPath="yes" />
+        <Environment Id="NuvexaMqPath" Name="PATH" Value="[ServerFolder]" Permanent="no" Part="last" Action="set" System="yes" />
+        <ServiceInstall
+          Id="NuvexaMqInstall"
+          Name="NuvexaMQ"
+          DisplayName="NuvexaMQ"
+          Description="NuvexaMQ message broker"
+          Type="ownProcess"
+          Start="auto"
+          Account="LocalSystem"
+          ErrorControl="normal"
+          Arguments="--data &quot;[DataDir]&quot;" />
+        <ServiceControl Id="NuvexaMqControl" Name="NuvexaMQ" Start="install" Stop="both" Remove="uninstall" Wait="no" />
+      </Component>
+      <Files Include="$(var.ServerDir)/**">
+        <Exclude Files="$(var.ServerDir)/nuvexamq.exe" />
+        <Exclude Files="$(var.ServerDir)/**/*.pdb" />
+      </Files>
+    </ComponentGroup>
+
+    <ComponentGroup Id="DesktopFiles" Directory="DesktopFolder">
+      <Component Id="DesktopExe" Guid="c4a1e8b2-7d33-4e91-8f60-1a2b3c4d5e02">
+        <File Id="DesktopExe" Source="$(var.DesktopDir)/Nuventra.NuvexaMQ.Desktop.exe" KeyPath="yes" />
+      </Component>
+      <Files Include="$(var.DesktopDir)/**">
+        <Exclude Files="$(var.DesktopDir)/Nuventra.NuvexaMQ.Desktop.exe" />
+        <Exclude Files="$(var.DesktopDir)/**/*.pdb" />
+      </Files>
+    </ComponentGroup>
+
+    <Component Id="DataDirectory" Directory="DataDir" Guid="c4a1e8b2-7d33-4e91-8f60-1a2b3c4d5e03">
+      <CreateFolder />
+      <RegistryValue Root="HKLM" Key="Software\Nuventra\NuvexaMQ" Name="DataDir" Type="string" Value="[DataDir]" KeyPath="yes" />
+    </Component>
+
+    <Component Id="StartMenuShortcut" Directory="ProgramMenuFolder" Guid="c4a1e8b2-7d33-4e91-8f60-1a2b3c4d5e04">
+      <Shortcut Id="DesktopShortcut" Name="NuvexaMQ" Target="[#DesktopExe]" WorkingDirectory="DesktopFolder" />
+      <RemoveFolder Id="RemoveProgramMenu" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\Nuventra\NuvexaMQ" Name="shortcut" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+  </Fragment>
+</Wix>

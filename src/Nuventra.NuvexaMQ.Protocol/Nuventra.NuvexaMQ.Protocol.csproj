@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>Nuventra.NuvexaMQ.Protocol</RootNamespace>
+    <AssemblyName>Nuventra.NuvexaMQ.Protocol</AssemblyName>
+    <PackageId>Nuventra.NuvexaMQ.Protocol</PackageId>
+    <Title>NuvexaMQ protocol</Title>
+    <Description>Length-prefixed frame codec shared by the NuvexaMQ server and .NET client.</Description>
+    <PackageTags>nuvexamq;protocol;broker;dotnet</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsAotCompatible>true</IsAotCompatible>
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
