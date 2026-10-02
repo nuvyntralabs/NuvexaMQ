@@ -20,7 +20,7 @@
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="InstallFolder" Name="NuvexaMQ">
         <Directory Id="ServerFolder" Name="server" />
-        <Directory Id="DesktopFolder" Name="desktop" />
+        <Directory Id="DesktopAppFolder" Name="desktop" />
       </Directory>
     </StandardDirectory>
     <StandardDirectory Id="CommonAppDataFolder">
@@ -54,7 +54,7 @@
       </Files>
     </ComponentGroup>
 
-    <ComponentGroup Id="DesktopFiles" Directory="DesktopFolder">
+    <ComponentGroup Id="DesktopFiles" Directory="DesktopAppFolder">
       <Component Id="DesktopExe" Guid="c4a1e8b2-7d33-4e91-8f60-1a2b3c4d5e02">
         <File Id="DesktopExe" Source="$(var.DesktopDir)/Nuventra.NuvexaMQ.Desktop.exe" KeyPath="yes" />
       </Component>
@@ -70,7 +70,7 @@
     </Component>
 
     <Component Id="StartMenuShortcut" Directory="ProgramMenuFolder" Guid="c4a1e8b2-7d33-4e91-8f60-1a2b3c4d5e04">
-      <Shortcut Id="DesktopShortcut" Name="NuvexaMQ" Target="[#DesktopExe]" WorkingDirectory="DesktopFolder" />
+      <Shortcut Id="DesktopShortcut" Name="NuvexaMQ" Target="[#DesktopExe]" WorkingDirectory="DesktopAppFolder" />
       <RemoveFolder Id="RemoveProgramMenu" On="uninstall" />
       <RegistryValue Root="HKCU" Key="Software\Nuventra\NuvexaMQ" Name="shortcut" Type="integer" Value="1" KeyPath="yes" />
     </Component>
