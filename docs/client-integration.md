@@ -53,7 +53,7 @@ The same five names exist for JavaScript, TypeScript, PHP, Python, Ruby, Java, G
 ## Session lifetime
 
 1. Open TCP to `NUVEXA_HOST:NUVEXA_PORT`.
-2. Send Hello and wait for HelloOk. The version string is `0.1.0`.
+2. Send Hello and wait for HelloOk. The version string is `0.1.1`.
 3. Declare what you need: a stream, a consumer, or an exchange and queue.
 4. Publish or fetch.
 5. Close the socket when the process exits. Ephemeral consumers disappear. Durable consumers remain, and the next connection that uses the same name continues from the stored cursor.

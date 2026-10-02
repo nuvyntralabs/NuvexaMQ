@@ -2,6 +2,11 @@ namespace Nuventra.NuvexaMQ.Server;
 
 public static class StartupLog
 {
+    public static readonly string ProductVersion = Format(typeof(StartupLog).Assembly.GetName().Version);
+
+    private static string Format(Version? version) =>
+        version is null ? "0.0.0" : $"{version.Major}.{version.Minor}.{Math.Max(version.Build, 0)}";
+
     public static string Advertise(string address)
     {
         if (string.IsNullOrWhiteSpace(address) || address is "0.0.0.0" or "*" or "+" or "::" or "[::]")
@@ -28,12 +33,12 @@ public static class StartupLog
     public static void WriteBanner(NuvexaMqOptions options, int listenPort, int healthPort, int managementPort, int managementHttpsPort, bool tls, bool generatedHttps)
     {
         var stamp = UnixNow();
-        Console.WriteLine($"{stamp}: NuvexaMQ version 0.1.0 starting");
+        Console.WriteLine($"{stamp}: NuvexaMQ version {ProductVersion} starting");
         Console.WriteLine($"{stamp}: Opening {(tls ? "tls" : "ipv4")} listen socket on port {listenPort}.");
         Console.WriteLine($"{stamp}: Opening http listen socket on port {healthPort}.");
         Console.WriteLine($"{stamp}: Opening http listen socket on port {managementPort}.");
         Console.WriteLine($"{stamp}: Opening https listen socket on port {managementHttpsPort}.");
-        Console.WriteLine($"{stamp}: NuvexaMQ version 0.1.0 running");
+        Console.WriteLine($"{stamp}: NuvexaMQ version {ProductVersion} running");
         foreach (var url in ListenerUrls(options.ListenAddress, listenPort, options.HealthAddress, healthPort, options.ManagementAddress, managementPort, managementHttpsPort, tls))
             Console.WriteLine(url);
         if (generatedHttps)

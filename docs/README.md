@@ -1,6 +1,6 @@
 # NuvexaMQ documentation
 
-Version 0.1.0. Author Niladri Prasad Padhy / Nuventra. License MIT.
+Version 0.1.1. Author Niladri Prasad Padhy / Nuventra. License MIT.
 
 | Manual | Who it is for |
 | --- | --- |

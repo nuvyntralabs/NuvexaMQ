@@ -259,7 +259,7 @@ public sealed class NuvexaMqServer : IAsyncDisposable
             var loginUser = string.IsNullOrEmpty(session.User) ? "" : session.User;
             StartupLog.Verbose(_options.Verbose, $"New client connected from {peer} as {shown} (u'{loginUser}', v'{session.Vhost}').");
 
-            await FrameCodec.WriteAsync(stream, new Frame(Op.HelloOk, hello.RequestId, Payloads.HelloOk("0.1.0")), _stop.Token).ConfigureAwait(false);
+            await FrameCodec.WriteAsync(stream, new Frame(Op.HelloOk, hello.RequestId, Payloads.HelloOk(StartupLog.ProductVersion)), _stop.Token).ConfigureAwait(false);
             while (!_stop.IsCancellationRequested)
             {
                 Frame request;

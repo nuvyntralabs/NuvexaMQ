@@ -527,10 +527,9 @@ internal static class ManagementHost
     {
         var snapshot = broker.Snapshot();
         var streams = broker.ListStreams();
-        var version = typeof(ManagementHost).Assembly.GetName().Version;
         return new
         {
-            version = version is null ? "0.1.0" : $"{version.Major}.{version.Minor}.{version.Build}",
+            version = StartupLog.ProductVersion,
             node = Dns.GetHostName(),
             dataDir = options.DataDir,
             tokenRequired = !string.IsNullOrEmpty(options.Token),

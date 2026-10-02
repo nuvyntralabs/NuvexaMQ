@@ -2,7 +2,7 @@
 
 Durable message broker. Install the server, then integrate with a client sample.
 
-**Version:** 0.1.0  
+**Version:** 0.1.1  
 **Author:** Niladri Prasad Padhy / Nuventra  
 **License:** MIT
 
@@ -27,7 +27,7 @@ The package installs the broker and the desktop app, puts `nuvexamq` on `PATH`, 
 CI on `main` builds these packages and keeps them as workflow artifacts for 14 days. Pushing the tag `v<Version>` (the version in `Directory.Build.props`) publishes those packages on the GitHub Release. A push that is not that tag does not create a release. Build one from a source checkout:
 
 ```bash
-./packaging/pack.sh 0.1.0 osx-arm64 artifacts
+./packaging/pack.sh 0.1.1 osx-arm64 artifacts
 ```
 
 Use `win-x64`, `win-arm64`, `osx-x64`, `linux-x64`, or `linux-arm64` for the other packages. Windows needs the WiX CLI (`dotnet tool install -g wix --version 5.0.2`). Linux needs `fpm` and `rpmbuild`. macOS uses `pkgbuild`.

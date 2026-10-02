@@ -1,7 +1,7 @@
 name: CI
 
 # Pushes and pull requests upload Actions artifacts. They do not create a
-# GitHub Release. A release is created only when a version tag (v0.1.0) is
+# GitHub Release. A release is created only when a version tag (v0.1.1) is
 # pushed and every job on that run succeeded. If that release is already
 # published, the build does not start.
 on:

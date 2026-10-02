@@ -1,6 +1,6 @@
 # NuvexaMQ technical reference
 
-NuvexaMQ 0.1.0 is a single-node durable message broker. One append-only log stores each message. A stream, a queue, and an exchange binding are three ways to write or read that log.
+NuvexaMQ 0.1.1 is a single-node durable message broker. One append-only log stores each message. A stream, a queue, and an exchange binding are three ways to write or read that log.
 
 The wire protocol is NuvexaMQ's own length-prefixed TCP protocol. It is not AMQP, MQTT, or Kafka. RabbitMQ is the model for virtual hosts, users, permissions, exchanges, queues, bindings, and policies. The bytes on the socket are different.
 
@@ -185,7 +185,7 @@ The first frame on a connection must be Hello. The server handles one request at
 | Code | Name | Payload |
 | --- | --- | --- |
 | 1 | Hello | token, client name, user, password, virtual host. If the payload ends after the client name, user and password are empty and the virtual host is `/`. |
-| 2 | HelloOk | version string, `0.1.0` |
+| 2 | HelloOk | version string, `0.1.1` |
 | 3 | EnsureStream | name, uint16 filter count, filters, uint16 partition count, int64 max age ms, int64 max bytes, int32 max message bytes |
 | 4 | EnsureStreamOk | empty |
 | 5 | Publish | subject, key, uint16 header count, each header a string name plus a blob value, then the payload blob. An empty key round-robins. |
