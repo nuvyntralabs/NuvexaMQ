@@ -24,7 +24,7 @@ Production does not use the `src` folder. Install the package for the machine:
 
 The package installs the broker and the desktop app, puts `nuvexamq` on `PATH`, and starts the broker on boot. Data is kept in `C:\ProgramData\NuvexaMQ\data`, `/Library/Application Support/NuvexaMQ/data`, or `/var/lib/nuvexamq`.
 
-CI on `main` builds these packages and uploads them as workflow artifacts. Build one from a source checkout:
+CI on `main` builds these packages and keeps them as workflow artifacts for 14 days. Pushing the tag `v<Version>` (the version in `Directory.Build.props`) publishes those packages on the GitHub Release. A push that is not that tag does not create a release. Build one from a source checkout:
 
 ```bash
 ./packaging/pack.sh 0.1.0 osx-arm64 artifacts

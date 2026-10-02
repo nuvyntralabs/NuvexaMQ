@@ -1,13 +1,72 @@
 name: CI
 
+# Pushes and pull requests upload Actions artifacts. They do not create a
+# GitHub Release. A release is created only when a version tag (v0.1.0) is
+# pushed and every job on that run succeeded. If that release is already
+# published, the build does not start.
 on:
   push:
     branches: [main, master]
+    tags: ["v*"]
   pull_request:
+  workflow_dispatch:
+
+# A tag push and the main push of the same commit share one run. Only the
+# tag run can create a GitHub Release.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      skip_build: ${{ steps.gate.outputs.skip_build }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: read
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props | head -1)"
+          if [ -z "$version" ]; then
+            echo "Directory.Build.props has no Version." >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - id: gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ steps.read.outputs.version }}"
+          if [ "${{ github.ref_type }}" = "tag" ] && [ "${{ github.ref_name }}" != "v${version}" ]; then
+            echo "Tag ${{ github.ref_name }} does not match Directory.Build.props version v${version}." >&2
+            exit 1
+          fi
+          skip=false
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            if json="$(gh release view "v${version}" --repo "${{ github.repository }}" --json isDraft 2>/dev/null)"; then
+              draft="$(python3 -c 'import json,sys; print(json.loads(sys.argv[1]).get("isDraft"))' "$json")"
+              if [ "$draft" = "False" ]; then
+                skip=true
+                echo "GitHub Release v${version} already exists. Skipping the build."
+              fi
+            fi
+          fi
+          echo "skip_build=$skip" >> "$GITHUB_OUTPUT"
+
   test:
     name: Test ${{ matrix.tfm }}
+    needs: version
+    if: needs.version.outputs.skip_build != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -32,7 +91,8 @@ jobs:
 
   packages:
     name: Package ${{ matrix.rid }}
-    needs: test
+    needs: [version, test]
+    if: needs.version.outputs.skip_build != 'true'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     strategy:
@@ -70,19 +130,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ruby ruby-dev build-essential rpm
           sudo gem install --no-document fpm
-      - name: Read version
-        id: version
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props | head -1)"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Pack
         shell: bash
         run: |
           set -euo pipefail
           chmod +x packaging/pack.sh packaging/macos/postinstall packaging/linux/postinst packaging/linux/prerm packaging/linux/postrm
-          packaging/pack.sh "${{ steps.version.outputs.version }}" "${{ matrix.rid }}" "$PWD/artifacts"
+          packaging/pack.sh "${{ needs.version.outputs.version }}" "${{ matrix.rid }}" "$PWD/artifacts"
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
@@ -94,3 +147,47 @@ jobs:
             artifacts/*.rpm
           if-no-files-found: error
           retention-days: 14
+
+  publish-release:
+    name: GitHub Release
+    # A custom if replaces the default "needs succeeded" check.
+    # success() keeps a failed tag run from creating a release.
+    if: github.ref_type == 'tag' && success() && needs.version.outputs.skip_build != 'true'
+    needs: [version, test, packages]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: NuvexaMQ-*
+          path: release-artifacts
+          merge-multiple: false
+      - name: Collect installers
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          find release-artifacts -type f \( -name '*.msi' -o -name '*.pkg' -o -name '*.deb' -o -name '*.rpm' \) -exec cp {} dist/ \;
+          count="$(find dist -type f | wc -l | tr -d ' ')"
+          echo "Collected $count package(s)"
+          ls -lh dist
+          if [ "$count" -ne 8 ]; then
+            echo "Expected 8 packages (two Windows, two macOS, four Linux)." >&2
+            exit 1
+          fi
+      - name: Publish GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${{ github.ref_name }}"
+          version="${{ needs.version.outputs.version }}"
+          gh release create "$tag" dist/* \
+            --repo "${{ github.repository }}" \
+            --title "NuvexaMQ ${version}" \
+            --generate-notes \
+            --verify-tag

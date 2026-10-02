@@ -31,7 +31,7 @@ The data port binds to `0.0.0.0` unless `ListenAddress` is changed. The banner p
 | macOS | `NuvexaMQ-<version>-osx-arm64.pkg` or `osx-x64.pkg` | launchd `com.nuventra.nuvexamq` | `/Library/Application Support/NuvexaMQ/data` |
 | Linux | `nuvexamq_<version>_amd64.deb` or `_arm64.deb`, and the matching `.rpm` | systemd `nuvexamq` | `/var/lib/nuvexamq` |
 
-The package installs the broker and the desktop app, puts `nuvexamq` on `PATH`, and starts the broker on boot. CI uploads those packages as workflow artifacts for 14 days. It does not push them to NuGet or to a GitHub Release.
+The package installs the broker and the desktop app, puts `nuvexamq` on `PATH`, and starts the broker on boot. CI keeps the packages as workflow artifacts for 14 days. The tag `v<Version>` publishes them on the GitHub Release for that version. CI does not push them to NuGet.
 
 The desktop window uses a different data directory: the user application-data folder `NuvexaMQ/data`. On macOS that is `~/Library/Application Support/NuvexaMQ/data`. Starting the desktop while the system service already owns 5761–5764 fails with "Address already in use". The window then shows **In use**, and **Stop** unloads the system service (macOS asks for an administrator password because that service runs as root and restarts if it is only killed). **Open admin portal** opens `http://127.0.0.1:5763/`.
 
